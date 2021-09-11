@@ -1,0 +1,6 @@
+[book]
+authors = ["Greg Wojtak"]
+language = "en"
+multilingual = false
+src = "docs"
+title = "Table Level Backup and Restore With Elastio"
