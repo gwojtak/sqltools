@@ -10,5 +10,5 @@ An under-development suite of tools for working with different types of SQL data
 - `mysqltablerestore` - It is incredibly dumb, works only for tables and assumes usage of `mysqldump` to create the dump in the first place
 
 ## TODO List
-[] Better name for the package
-[] Tests
+- [ ] Better name for the package
+- [ ] Tests
