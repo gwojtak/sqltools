@@ -50,7 +50,6 @@ func NewConstraint(table string, constraint string) *Constraint {
 }
 
 func (c *Constraint) SQLString(table string) string {
-	// `ALTER TABLE megalith ADD CONSTRAINT "name" DEFAULT NULL FOR first_name`
 	switch c.Type {
 	case "default":
 		return fmt.Sprintf(`ALTER TABLE %s ADD CONSTRAINT %s DEFAULT '%s' FOR '%s'`, table, c.Name, c.Definition, c.Key)
@@ -59,5 +58,3 @@ func (c *Constraint) SQLString(table string) string {
 	}
 	return ""
 }
-
-

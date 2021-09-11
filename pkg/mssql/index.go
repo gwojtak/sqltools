@@ -10,6 +10,7 @@ type Index struct {
 	Columns   []string
 	Clustered BetterBool
 	Unique    BetterBool
+	IsPrimary bool
 }
 
 func NewIndex(table string, index string) (*Index, error) {
@@ -55,12 +56,17 @@ func NewIndex(table string, index string) (*Index, error) {
 		Columns:   keys,
 		Clustered: clustered,
 		Unique:    unique,
+		IsPrimary: pkey.Value,
 	}, nil
 }
 
 func (i *Index) String() string {
 	var clustered string
 	var unique string
+
+	if i.IsPrimary {
+		return fmt.Sprintf("  CONSTRAINT %s PRIMARY KEY (%s)", i.Name, strings.Join(i.Columns, ", "))
+	}
 
 	if i.Unique.Bool() {
 		unique = "UNIQUE"

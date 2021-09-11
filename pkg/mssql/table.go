@@ -16,6 +16,11 @@ const (
 	identityQuery = `SELECT seed_value, increment_value
 	FROM sys.identity_columns
 	WHERE object_id = OBJECT_ID('%s') ) AS ic`
+	primaryKeyQuery = `SELECT i.name, COL_NAME(ic.object_id, ic.column_id) AS column_name
+    FROM sys.indexes as i
+        INNER JOIN sys.index_columns AS ic
+        ON i.index_id = ic.index_id
+    WHERE ic.object_id = OBJECT_ID('%s') AND i.is_primary_key = 1 AND i.object_id = OBJECT_ID('%s')`
 )
 
 type Table struct {
@@ -63,7 +68,6 @@ func NewTable(database string, table string) (*Table, error) {
 			return nil, err
 		}
 		if tmp_col.IsIdentity.Bool() == true {
-			fmt.Printf("\n\n%s %t\n\n", tmp_col.Name, tmp_col.IsIdentity.Bool())
 			identityColumn = tmp_col.Name
 			st, e := DBConn.Prepare(fmt.Sprintf("SELECT seed_value, increment_value FROM sys.identity_columns WHERE object_id = OBJECT_ID('%s')", table))
 			if err != nil {
@@ -204,40 +208,3 @@ func (t *Table) Dump() string {
 	}
 	return returnString
 }
-
-/*	// Indexes
-	index := Index{}
-	result.NextResultSet()
-	for result.Next() {
-		ret := result.Scan(
-			&index.Name,
-			&index.Description,
-			&index.Keys,
-		)
-
-		if ret != nil {
-			return nil, ret
-		}
-		new_table.Indexes = append(new_table.Indexes, index)
-	}
-
-	// Constraints
-	constraint := Constraint{}
-	result.NextResultSet()
-	for result.Next() {
-		ret := result.Scan(
-			&constraint.Type,
-			&constraint.Name,
-			&constraint.DeleteAction,
-			&constraint.UpdateAction,
-			&constraint.StatusEnabled,
-			&constraint.StatusForReplication,
-			&constraint.Keys,
-		)
-		if ret != nil {
-			log.Println("DEBUG DEBUG ERROR", ret)
-			return nil, ret
-		}
-		new_table.Constraints = append(new_table.Constraints, constraint)
-	}
-*/
