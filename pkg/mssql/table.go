@@ -33,9 +33,9 @@ type Table struct {
 func NewTable(database string, table string) (*Table, error) {
 	var identityColumn string
 
-	info_schema := fmt.Sprintf(columnsQuery, database, table, table, table)
+	infoSchema := fmt.Sprintf(columnsQuery, database, table, table, table)
 
-	stmt, err := DBConn.Prepare(info_schema)
+	stmt, err := DBConn.Prepare(infoSchema)
 	if err != nil {
 		return nil, err
 	}
@@ -46,29 +46,29 @@ func NewTable(database string, table string) (*Table, error) {
 		return nil, err
 	}
 
-	new_columns := []Column{}
+	newColumns := []Column{}
 
 	for result.Next() {
-		tmp_col := Column{}
-		tmp_datatype := ColumnDataType{}
+		tmpCol := Column{}
+		tmpDatatype := ColumnDataType{}
 
 		err := result.Scan(
-			&tmp_col.Name,
-			&tmp_datatype.TypeName,
-			&tmp_datatype.MaxLength,
-			&tmp_datatype.Precision,
-			&tmp_datatype.Scale,
-			&tmp_col.Collation,
-			&tmp_col.Nullable,
-			&tmp_col.IsRowGuidCol,
-			&tmp_col.IsIdentity,
-			&tmp_col.Default,
+			&tmpCol.Name,
+			&tmpDatatype.TypeName,
+			&tmpDatatype.MaxLength,
+			&tmpDatatype.Precision,
+			&tmpDatatype.Scale,
+			&tmpCol.Collation,
+			&tmpCol.Nullable,
+			&tmpCol.IsRowGuidCol,
+			&tmpCol.IsIdentity,
+			&tmpCol.Default,
 		)
 		if err != nil {
 			return nil, err
 		}
-		if tmp_col.IsIdentity.Bool() == true {
-			identityColumn = tmp_col.Name
+		if tmpCol.IsIdentity.Bool() == true {
+			identityColumn = tmpCol.Name
 			st, e := DBConn.Prepare(fmt.Sprintf("SELECT seed_value, increment_value FROM sys.identity_columns WHERE object_id = OBJECT_ID('%s')", table))
 			if err != nil {
 				return nil, err
@@ -79,16 +79,16 @@ func NewTable(database string, table string) (*Table, error) {
 				return nil, e
 			}
 			for r.Next() {
-				err = r.Scan(&tmp_col.Seed, &tmp_col.Increment)
+				err = r.Scan(&tmpCol.Seed, &tmpCol.Increment)
 			}
 		}
-		tmp_col.Type = tmp_datatype
-		new_columns = append(new_columns, tmp_col)
+		tmpCol.Type = tmpDatatype
+		newColumns = append(newColumns, tmpCol)
 	}
 
 	returnTable := Table{
 		Name:     table,
-		Columns:  new_columns,
+		Columns:  newColumns,
 		Identity: identityColumn,
 	}
 
@@ -128,7 +128,7 @@ func (t *Table) LoadIndexes() error {
 }
 
 func (t *Table) ListIndexes() ([]string, error) {
-	var return_string []string
+	var returnString []string
 
 	stmt, err := DBConn.Prepare(fmt.Sprintf("SELECT name FROM sys.indexes WHERE is_hypothetical = 0 AND index_id != 0 AND object_id = OBJECT_ID('%s')", t.Name))
 	if err != nil {
@@ -141,13 +141,14 @@ func (t *Table) ListIndexes() ([]string, error) {
 	for result.Next() {
 		var x string
 		result.Scan(&x)
-		return_string = append(return_string, x)
+		returnString = append(returnString, x)
 	}
-	return return_string, nil
+	return returnString, nil
 }
 
 func (t *Table) String() string {
-	definition := fmt.Sprintf("CREATE TABLE %s (\n", t.Name)
+	definition := fmt.Sprintf("-- Dumping table structure and data of table `%s`\n", t.Name)
+	definition += fmt.Sprintf("CREATE TABLE %s (\n", t.Name)
 	var columnDefinitions []string
 
 	for _, col := range t.Columns {
@@ -206,5 +207,6 @@ func (t *Table) Dump() string {
 		}
 		returnString = fmt.Sprintf("%sINSERT INTO %s %s VALUES (%s);\n", returnString, t.Name, strings.Join(columnSpec, ", "), strings.Join(row, ", "))
 	}
+	returnString += "-- End table dump\n"
 	return returnString
 }

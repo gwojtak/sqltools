@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/url"
 
-	version "github.com/gwojtak/sqltools/version"
+	version "github.com/gwojtak/sqltools/pkg/version"
 )
 
 var DBConn *sql.DB
